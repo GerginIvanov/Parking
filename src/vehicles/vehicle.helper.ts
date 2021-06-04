@@ -13,11 +13,11 @@ function registerVehicle(data: any): Promise<any> {
          */
         let placeholder: any;
         if (data.vehicleType === 'A') {
-            placeholder = process.env.A;
+            placeholder = process.env.vehicleSizeA;
         } else if (data.vehicleType === "B") {
-            placeholder = process.env.B;
+            placeholder = process.env.vehicleSizeB;
         } else {
-            placeholder = process.env.C;
+            placeholder = process.env.vehicleSizeC;
         }
         const spaceNeeded: number = parseInt(placeholder);
 
