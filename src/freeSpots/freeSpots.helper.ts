@@ -5,12 +5,13 @@ function getFreeSpots() {
     return new Promise((resolve, reject) => {
         services.getFreeSpots()
             .then((result) => {
-                resolve(new PromiseResponse(
+                resolve(new PromiseResponse(  //this status 'success' can be used for unit testing
                     'Success',
                     result,
                 ));
             })
             .catch((err) => {
+                console.log(err);
                 reject({
                     status: "Error",
                     message: "Something went wrong: " + err,

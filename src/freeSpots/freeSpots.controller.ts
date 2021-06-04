@@ -14,5 +14,5 @@ function getFreeSpots(req, res, next) {
 }
 
 export {
-
+    getFreeSpots,
 }
