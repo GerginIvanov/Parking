@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon src/main.ts",
-    "prod": "console.log(no prod yet)"
+    "prod": "tsc -p ./tsconfig.json&Set NODE_ENV=prod&node dist/main.js"
   },
   "repository": {
     "type": "git",
