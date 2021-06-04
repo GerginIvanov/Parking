@@ -7,13 +7,13 @@ import { db } from './shared/index';
 
 
 const bodyParser = require('body-parser');
-const config = require('route_to_config'); //NOT REAL ROUTE
+const config = require('./config/config'); //NOT REAL ROUTE
 
 export class Server {
     protected express = express;
     protected app: express.Application;
     private server: HttpServer;
-    private port = config.api_port || 3000;
+    private port = config.api_port || 3001;
 
     constructor() {
         this.app = this.express();
@@ -26,18 +26,18 @@ export class Server {
         this.registerExpressRouters();
         this.start();
 
-        // setTimeout(this.syncDatabase, 2000);
+        setTimeout(this.syncDatabase, 2000);
     }
 
-    // private syncDatabase() {
-    //     // const db = require('./shared/models/index');
-    //     db.sequelize.sync()
-    //         .then(() => console.log("Connected to the database!"))
-    //         .catch((error) => {
-    //             console.log(error);
-    //         });
+    private syncDatabase() {
+        // const db = require('./shared/models/index');
+        db.sequelize.sync()
+            .then(() => console.log("Connected to the database!"))
+            .catch((error) => {
+                console.log(error);
+            });
 
-    // }
+    }
 
     private start(): void {
         this.server.listen(this.port, () => {
