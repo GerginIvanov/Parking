@@ -2,13 +2,14 @@
 import * as express from 'express';
 import { createServer, Server as HttpServer } from 'http';
 import freeSpotsRoutes from './freeSpots/freeSpots.routes';
+import vehicleRoutes from './vehicles/vehicle.routes';
 
-const _app_folder = '/dist/planner';
+const _app_folder = '/dist/parking';
 import { db } from './shared/index';
 
 
 const bodyParser = require('body-parser');
-const config = require('./config/config'); //NOT REAL ROUTE
+const config = require('./config/config');
 
 export class Server {
     protected express = express;
@@ -46,6 +47,9 @@ export class Server {
     }
 
     private registerExpressRouters() {
+
         this.app.use('/api/parking/freeSpots', freeSpotsRoutes);
+
+        this.app.use('/api/parking/vehicles', vehicleRoutes);
     }
 }

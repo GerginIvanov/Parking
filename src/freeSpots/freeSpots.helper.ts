@@ -1,7 +1,7 @@
 import { PromiseResponse } from '../shared/promise.helper';
 const services = require('./freeSpots.services');
 
-function getFreeSpots() {
+function getFreeSpots(): Promise<PromiseResponse> {
     return new Promise((resolve, reject) => {
         services.getFreeSpots()
             .then((result) => {

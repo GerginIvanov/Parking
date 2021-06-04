@@ -1,8 +1,8 @@
 const models = require('../shared');
 
-function getFreeSpots() {
+function getFreeSpots(): Promise<any> {
     return new Promise((resolve, reject) => {
-        models.FreeSpots.findAll({
+        models.FreeSpots.findOne({
             where: {
                 id: 'freeSpots',
             },
