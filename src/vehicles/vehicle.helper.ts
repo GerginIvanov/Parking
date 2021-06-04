@@ -1,7 +1,7 @@
 import { PromiseResponse } from '../shared/promise.helper';
 require('dotenv').config();
 const services = require('./vehicle.services');
-const getFreeSpots = require('../freeSpots/freeSpots.services');
+const FreeSpots = require('../freeSpots/freeSpots.services');
 
 function registerVehicle(data: any): Promise<any> {
     return new Promise((resolve, reject) => {
@@ -21,10 +21,13 @@ function registerVehicle(data: any): Promise<any> {
         }
         const spaceNeeded: number = parseInt(placeholder);
 
-        getFreeSpots.getFreeSpots() //check how many spots we have free at the moment
+        FreeSpots.getFreeSpots() //check how many spots we have free at the moment
             .then((freeSpots) => {
                 if (freeSpots.dataValues.currentSpots > spaceNeeded) { //compare free spots to what we need for current vehicle
                     services.registerVehicle(data)
+                        .then(
+                            FreeSpots.subtractFreeSpots(spaceNeeded) //update the space in the parking lot
+                        )
                         .then(() => {
                             resolve(new PromiseResponse(
                                 'Success',

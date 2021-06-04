@@ -31,6 +31,7 @@ function registerVehicle(data: any): Promise<boolean> {
     });
 }
 
+
 export {
     registerVehicle,
 }
