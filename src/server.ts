@@ -27,11 +27,10 @@ export class Server {
         this.registerExpressRouters();
         this.start();
 
-        setTimeout(this.syncDatabase, 2000);
+        this.syncDatabase();
     }
 
     private syncDatabase() {
-        // const db = require('./shared/models/index');
         db.sequelize.sync()
             .then(() => console.log("Connected to the database!"))
             .catch((error) => {
@@ -43,15 +42,6 @@ export class Server {
     private start(): void {
         this.server.listen(this.port, () => {
             console.log(`Listening on port ${this.port}`);
-        });
-    }
-
-    private stop(): Promise<void> {
-        return new Promise<void>((resolve, reject) => {
-            this.server.close(() => {
-                console.log('Server stopped!');
-                resolve();
-            });
         });
     }
 
