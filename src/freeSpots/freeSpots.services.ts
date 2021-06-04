@@ -14,7 +14,6 @@ function getFreeSpots(): Promise<any> {
                 resolve(result);
             })
             .catch((err) => {
-                console.log(err);
                 reject(err);
             })
     });
