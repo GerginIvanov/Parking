@@ -1,4 +1,6 @@
 import { Console } from "console";
+import { resolve } from "path/posix";
+import { any } from "sequelize/types/lib/operators";
 
 const models = require('../shared');
 const moment = require('moment');
@@ -109,7 +111,7 @@ function checkAvailableSpace(freeSpots: number, vehicleType: string): Promise<bo
     });
 }
 
-function currentTime() {
+function currentTime(): Promise<any> {
     return new Promise((resolve, reject) => {
         let time = Date.now();
         let currentTime = moment(time);
@@ -117,15 +119,26 @@ function currentTime() {
     });
 }
 
-function stayDuration(licensePlate: string) {
+function findVehicle(licensePlate: string): Promise<any> {
     return new Promise((resolve, reject) => {
         models.Vehicles.findOne({
             where: {
                 licensePlate: licensePlate,
             }
         })
-            .then(result => {
+            .then((result) => {
+                resolve(result);
+            })
+            .catch((err) => {
+                reject(err);
+            })
+    });
+}
 
+function stayDuration(licensePlate: string) {
+    return new Promise((resolve, reject) => {
+        findVehicle(licensePlate)
+            .then(result => {
                 let time1 = Date.now();
                 let currentTime = moment(time1);
                 console.log(`The current time is: ${currentTime.format('DD MM H:mm')}`);
@@ -147,36 +160,36 @@ function stayDuration(licensePlate: string) {
     });
 }
 
-function checkDaysStayed(licensePlate: string) {
+
+function calculatePrice(licensePlate: string, hours: number, days: any = null): Promise<number> {  //if we pass a parameter for days it calculates differently
     return new Promise((resolve, reject) => {
-        currentTime()
-            .then((currentTime) => {
-                let timeRightNow = moment(currentTime);
+        let day, night;
+        let fee: number = 0;
+        findVehicle(licensePlate)
+            .then((vehicle) => {
+                if (vehicle.dataValues.vehicleType === "A") {
+                    day = process.env.costDayA;
+                    night = process.env.costNightB;
+                } else if (vehicle.dataValues.vehicleType === "B") {
+                    day = process.env.costDayB;
+                    night = process.env.costNightB;
+                } else {
+                    day = process.env.costDayC;
+                    night = process.env.costNightC;
+                }
+                const dayFee = parseInt(day);
+                const nightFee = parseInt(night);
 
-                models.Vehicles.findOne({
-                    where: {
-                        licensePlate: licensePlate,
-                    }
-                })
-                    .then((result) => {
-                        let time2 = result.dataValues.createdAt;
-                        let carTime = moment(time2);
+                console.log(`For this vehicle day fee is ${dayFee} and night fee is ${nightFee}`);
 
-                        var duration = moment.duration(timeRightNow.diff(carTime));
-                        var final = duration.asDays();
-                        resolve(Math.floor(final));
-                    })
+                if (days) {
+                    fee = (10 * dayFee + 14 * nightFee) * days;
+                    resolve(fee);
+                } else {
 
+                }
             })
     });
-}
-
-function calculatePrice(vehicleType: string, dayPassed: boolean = false) {
-    if (dayPassed = true) {
-
-    } else {
-
-    }
 }
 
 export {
@@ -186,6 +199,31 @@ export {
     checkAvailableSpace,
     currentTime,
     stayDuration,
-    checkDaysStayed,
+    findVehicle,
     calculatePrice,
 }
+
+
+// function checkDaysStayed(licensePlate: string) {
+//     return new Promise((resolve, reject) => {
+//         currentTime()
+//             .then((currentTime) => {
+//                 let timeRightNow = moment(currentTime);
+
+//                 models.Vehicles.findOne({
+//                     where: {
+//                         licensePlate: licensePlate,
+//                     }
+//                 })
+//                     .then((result) => {
+//                         let time2 = result.dataValues.createdAt;
+//                         let carTime = moment(time2);
+
+//                         var duration = moment.duration(timeRightNow.diff(carTime));
+//                         var final = duration.asDays();
+//                         resolve(Math.floor(final));
+//                     })
+
+//             })
+//     });
+// }

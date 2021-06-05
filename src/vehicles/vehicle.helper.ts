@@ -61,18 +61,14 @@ function registerVehicle(data: any): Promise<any> {
 
 function deregisterVehicle(licensePlate: string): Promise<PromiseResponse> {
     return new Promise((resolve, reject) => {
-        // services.currentTime()
-        //     .then(result => { console.log(result) });
-
-        services.checkDaysStayed(licensePlate)
-            .then(result => {
-                console.log(`You have stayed here for ${result} days`);
-            })
-
         services.stayDuration(licensePlate) //this one works and doesnt throw errors
             .then(stayDuration => {
                 if (stayDuration > 24) {
-                    // calculatePrice();
+                    const days = Math.floor(stayDuration / 24);
+                    services.calculatePrice(licensePlate, stayDuration, days)
+                        .then((fee) => {
+                            console.log(`You owe at least ${fee}lv. currently!`);
+                        })
                 }
             })
     });
