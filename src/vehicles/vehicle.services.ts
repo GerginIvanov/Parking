@@ -16,7 +16,7 @@ function registerVehicle(data: any): Promise<boolean> {
                     reject({ message: "Something went wrong: " + err });
                 });
         } else {
-            models.Vehicles.create({ //check if we can rewrite without if-else
+            models.Vehicles.create({ 
                 licensePlate: data.licensePlate,
                 vehicleType: data.vehicleType,
             })
