@@ -1,12 +1,24 @@
 import * as helper from './vehicle.helper';
 
+function getFreeSpots(req, res, next) {
+    try {
+        return helper.getFreeSpots().then((response) => {
+            return res.status(200).send(response);
+        }, (err) => {
+            return next(err);
+        })
+    }
+    catch (err) {
+        return next(err);
+    }
+}
+
 function registerVehicle(req, res, next) {
     try {
         return helper.registerVehicle(req.body).then((response) => {
             return res.status(200).send(response);
         }, (err) => {
             return next(err);
-            console.log(err);
         })
     }
     catch (err) {
@@ -16,5 +28,5 @@ function registerVehicle(req, res, next) {
 
 export {
     registerVehicle,
-
+    getFreeSpots,
 }

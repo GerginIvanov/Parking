@@ -1,23 +1,40 @@
 'use strict';
 import { Sequelize } from 'sequelize';
-import { FreeSpotsFactory, FreeSpotsStatic } from './free_spots';
 import { VehiclesFactory, VehicleStatic } from './vehicles';
+import { VehicleSizeFactory, VehicleSizeStatic } from './vehicle_size';
 
 const config = require('../config/config');
 
 export interface DB {
     sequelize: Sequelize,
-    FreeSpots: FreeSpotsStatic,
     Vehicles: VehicleStatic,
+    VehicleSize: VehicleSizeStatic,
 }
 
 const sequelize = new Sequelize(config);
 
-export const FreeSpots = FreeSpotsFactory(sequelize);
+
 export const Vehicles = VehiclesFactory(sequelize);
+export const VehicleSize = VehicleSizeFactory(sequelize);
+
+/*
+    DB relations are defined here
+*/
+
+Vehicles.belongsTo(VehicleSize,{
+    foreignKey:{
+        name: 'vehicleType',
+    }
+});
+
+VehicleSize.hasMany(Vehicles, {
+    foreignKey: {
+        name: 'vehicleType',
+    }
+});
 
 export const db: DB = {
     sequelize,
-    FreeSpots,
+    VehicleSize,
     Vehicles,
 }

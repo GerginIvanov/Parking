@@ -5,7 +5,6 @@ import { BuildOptions, DataTypes, Model, Sequelize } from 'sequelize';
 interface VehicleAttributes {
     licensePlate: string,
     discount: string,
-    vehicleType: string,
 };
 
 export interface VehicleModel extends Model<VehicleAttributes>, VehicleAttributes { };
@@ -26,10 +25,6 @@ export function VehiclesFactory(sequelize: Sequelize): VehicleStatic {
             type: DataTypes.STRING,
             defaultValue: null,
         },
-        vehicleType: {
-            type: DataTypes.STRING,
-            allowNull: false,
-        }
     }, {
         timestamps: true,
     });
