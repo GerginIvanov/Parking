@@ -1,7 +1,3 @@
-import { Console } from "console";
-import { resolve } from "path/posix";
-import { any } from "sequelize/types/lib/operators";
-
 const models = require('../shared');
 const moment = require('moment');
 
@@ -111,8 +107,29 @@ function checkAvailableSpace(freeSpots: number, vehicleType: string): Promise<bo
     });
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 function currentTime(): Promise<any> {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
         let time = Date.now();
         let currentTime = moment(time);
         resolve(currentTime);
@@ -135,22 +152,36 @@ function findVehicle(licensePlate: string): Promise<any> {
     });
 }
 
-function stayDuration(licensePlate: string) {
+function registrationTime(licensePlate: string): Promise<any> {
     return new Promise((resolve, reject) => {
         findVehicle(licensePlate)
-            .then(result => {
-                let time1 = Date.now();
-                let currentTime = moment(time1);
-                console.log(`The current time is: ${currentTime.format('DD MM H:mm')}`);
+            .then((vehicle) => {
+                resolve(vehicle.dataValues.createdAt);
+            })
+            .catch((err) => {
+                reject(err);
+            })
+    });
+}
 
-                let time2 = result.dataValues.createdAt;
-                let carTime = moment(time2);
-                console.log(`The car was parked at: ${carTime.format('DD MM H:mm')}`);
+function stayDuration(licensePlate: string) { //this will need some cleaning up tomorrow
+    return new Promise((resolve, reject) => {
+        registrationTime(licensePlate)
+            .then(carRegistrationTime => {
+                currentTime()
+                    .then((currentTime) => {
+                        let time2 = carRegistrationTime;
+                        let carTime = moment(time2);
 
-                var duration = moment.duration(currentTime.diff(carTime)); //time elapsed between parking and leaving in 
-                var final = duration.asHours();
-                console.log(`Stay duration: ${Math.round(final)} hours`);
-                resolve(Math.round(final));
+                        console.log(`The car was parked at: ${carTime.format('H:mm')}`);
+                        console.log(`The current time is: ${currentTime.format('H:mm')}`);
+
+                        var duration = moment.duration(currentTime.diff(carTime)); //time elapsed between parking and leaving in 
+                        var final = duration.asHours();
+                        console.log(`Stay duration: ${Math.round(final)} hours`);
+                        resolve(Math.round(final));
+                    })
+
             })
             .catch((err) => {
                 reject({
@@ -161,7 +192,7 @@ function stayDuration(licensePlate: string) {
 }
 
 
-function calculatePrice(licensePlate: string, hours: number, days: any = null): Promise<number> {  //if we pass a parameter for days it calculates differently
+function calculatePrice(licensePlate: string, /* hours: number,*/ days: any = null): Promise<any> {  //if we pass a parameter for days it calculates differently
     return new Promise((resolve, reject) => {
         let day, night;
         let fee: number = 0;
@@ -182,11 +213,57 @@ function calculatePrice(licensePlate: string, hours: number, days: any = null): 
 
                 console.log(`For this vehicle day fee is ${dayFee} and night fee is ${nightFee}`);
 
-                if (days) {
-                    fee = (10 * dayFee + 14 * nightFee) * days;
-                    resolve(fee);
-                } else {
+                if (days) { //here we calculate if the vehicle has stayed for more than a day
+                    let wholeDaysFee = (10 * dayFee + 14 * nightFee) * days;
+                    // resolve(wholeDaysFee);
+                } else { //here we calculate if the vehicle has stayed for less than a day
+                    currentTime()
+                        .then(result => {
+                            let currentTime1 = moment(result).hours();
+                            let currentTime2 = parseInt(currentTime1);
+                            registrationTime(licensePlate)
+                                .then(result => {
+                                    let registrationTime1 = moment(result).hours();
+                                    let registrationTime2 = parseInt(registrationTime1);
+                                    console.log(registrationTime1, currentTime1);
+                                    if (registrationTime1 > currentTime1) { //if arrival > departure
+                                        let hours = 23;
+                                        while (hours > 0) {
+                                            if (hours > currentTime1 && hours < registrationTime1) { //skip the interval when the car was not parked
+                                                continue;
+                                            }
+                                            if (hours > 8 && hours < 18) {
+                                                fee += dayFee;
+                                            } else {
+                                                fee += nightFee;
+                                            }
+                                            hours--;
+                                        }
+                                    } else { //if departure > arrival
+                                        console.log("Departure was bigger than arrival");
+                                        console.log("Current time" + currentTime1);
+                                        console.log("Reg time" + registrationTime1);
+                                        let hours = 23;
+                                        while (hours >= 0) {
+                                            if (hours < 20 && hours > 0) { //this actually works; wtf I gotta debug
+                                                hours--;
+                                                continue;
+                                            }
+                                            if (hours >= 8 && hours < 18) {
+                                                fee += dayFee;
+                                                console.log(hours, fee);
+                                                hours--;
+                                            } else {
+                                                fee += nightFee;
+                                                console.log(hours, fee);
+                                                hours--;
+                                            }
+                                        }
+                                        resolve(fee);
+                                    }
 
+                                })
+                        })
                 }
             })
     });
@@ -201,29 +278,5 @@ export {
     stayDuration,
     findVehicle,
     calculatePrice,
+    registrationTime,
 }
-
-
-// function checkDaysStayed(licensePlate: string) {
-//     return new Promise((resolve, reject) => {
-//         currentTime()
-//             .then((currentTime) => {
-//                 let timeRightNow = moment(currentTime);
-
-//                 models.Vehicles.findOne({
-//                     where: {
-//                         licensePlate: licensePlate,
-//                     }
-//                 })
-//                     .then((result) => {
-//                         let time2 = result.dataValues.createdAt;
-//                         let carTime = moment(time2);
-
-//                         var duration = moment.duration(timeRightNow.diff(carTime));
-//                         var final = duration.asDays();
-//                         resolve(Math.floor(final));
-//                     })
-
-//             })
-//     });
-// }
