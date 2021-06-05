@@ -1,4 +1,7 @@
+import { Console } from "console";
+
 const models = require('../shared');
+const moment = require('moment');
 
 function registerVehicle(data: any): Promise<boolean> {
     return new Promise((resolve, reject) => {
@@ -106,9 +109,83 @@ function checkAvailableSpace(freeSpots: number, vehicleType: string): Promise<bo
     });
 }
 
+function currentTime() {
+    return new Promise((resolve, reject) => {
+        let time = Date.now();
+        let currentTime = moment(time);
+        resolve(currentTime);
+    });
+}
+
+function stayDuration(licensePlate: string) {
+    return new Promise((resolve, reject) => {
+        models.Vehicles.findOne({
+            where: {
+                licensePlate: licensePlate,
+            }
+        })
+            .then(result => {
+
+                let time1 = Date.now();
+                let currentTime = moment(time1);
+                console.log(`The current time is: ${currentTime.format('DD MM H:mm')}`);
+
+                let time2 = result.dataValues.createdAt;
+                let carTime = moment(time2);
+                console.log(`The car was parked at: ${carTime.format('DD MM H:mm')}`);
+
+                var duration = moment.duration(currentTime.diff(carTime)); //time elapsed between parking and leaving in 
+                var final = duration.asHours();
+                console.log(`Stay duration: ${Math.round(final)} hours`);
+                resolve(Math.round(final));
+            })
+            .catch((err) => {
+                reject({
+                    message: "Something went wrong: " + err,
+                });
+            })
+    });
+}
+
+function checkDaysStayed(licensePlate: string) {
+    return new Promise((resolve, reject) => {
+        currentTime()
+            .then((currentTime) => {
+                let timeRightNow = moment(currentTime);
+
+                models.Vehicles.findOne({
+                    where: {
+                        licensePlate: licensePlate,
+                    }
+                })
+                    .then((result) => {
+                        let time2 = result.dataValues.createdAt;
+                        let carTime = moment(time2);
+
+                        var duration = moment.duration(timeRightNow.diff(carTime));
+                        var final = duration.asDays();
+                        resolve(Math.floor(final));
+                    })
+
+            })
+    });
+}
+
+function calculatePrice(vehicleType: string, dayPassed: boolean = false) {
+    if (dayPassed = true) {
+
+    } else {
+
+    }
+}
+
 export {
     registerVehicle,
     calculateFreeSpots,
     checkVehicleSize,
     checkAvailableSpace,
+    currentTime,
+    stayDuration,
+    checkDaysStayed,
+    calculatePrice,
 }
