@@ -213,36 +213,45 @@ function calculatePrice(licensePlate: string, /* hours: number,*/ days: any = nu
 
                 console.log(`For this vehicle day fee is ${dayFee} and night fee is ${nightFee}`);
 
+                /**
+                 * I think this entire if-else logic needs to be moved to the helper
+                 * and afterwards I just need to separate the code itself into methods
+                 */
+
                 if (days) { //here we calculate if the vehicle has stayed for more than a day
                     let wholeDaysFee = (10 * dayFee + 14 * nightFee) * days;
-                    // resolve(wholeDaysFee);
+                    //here we write the same if-else to compare reg/dereg
                 } else { //here we calculate if the vehicle has stayed for less than a day
                     currentTime()
                         .then(result => {
-                            let currentTime1 = moment(result).hours();
-                            let currentTime2 = parseInt(currentTime1);
+                            let currentTime = moment(result).hours();
                             registrationTime(licensePlate)
                                 .then(result => {
-                                    let registrationTime1 = moment(result).hours();
-                                    let registrationTime2 = parseInt(registrationTime1);
-                                    console.log(registrationTime1, currentTime1);
-                                    if (registrationTime1 > currentTime1) { //if arrival > departure
-                                        let hours = 23;
-                                        while (hours > 0) {
-                                            if (hours > currentTime1 && hours < registrationTime1) { //skip the interval when the car was not parked
+                                    //convert the car reg and dereg times into integers to use for the loops 
+                                    let registrationTime = moment(result).hours();
+                                    if (registrationTime > currentTime) { //if arrival > departure
+                                        let hours = 0;
+                                        console.log(`Countter starts at: ${hours}`);
+                                        console.log(`Arrival is larger than departure`);
+                                        while (hours < 24) {
+                                            if (hours > currentTime && hours < registrationTime) { //skip the interval when the car was not parked
+                                                hours++;
                                                 continue;
-                                            }
-                                            if (hours > 8 && hours < 18) {
+                                            } else if (hours >= 8 && hours < 18) {
                                                 fee += dayFee;
+                                                console.log(`Day fee for ${hours} - ${hours + 1} and total fee currently is ${fee}`);
+                                                hours++;
                                             } else {
                                                 fee += nightFee;
+                                                console.log(`Night fee for ${hours} - ${hours + 1} and total fee currently is ${fee}`);
+                                                hours++;
                                             }
-                                            hours--;
                                         }
-                                    } else { //if departure > arrival
+                                        resolve(fee);
+                                    } else { //if departure > arrival 
                                         console.log("Departure was bigger than arrival");
-                                        console.log("Current time" + currentTime1);
-                                        console.log("Reg time" + registrationTime1);
+                                        console.log("Reg time" + registrationTime);
+                                        console.log("Current time" + currentTime);
                                         let hours = 23;
                                         while (hours >= 0) {
                                             if (hours < 20 && hours > 0) { //this actually works; wtf I gotta debug
