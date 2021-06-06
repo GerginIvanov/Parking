@@ -69,7 +69,6 @@ function checkAvailableSpace(freeSpots: number, vehicleType: string): Promise<bo
     return new Promise((resolve, reject) => {
         checkVehicleInfo(vehicleType)
             .then((spaceNeeded) => {
-                console.log(spaceNeeded);
                 if (freeSpots > spaceNeeded.dataValues.vehicleSize) {
                     resolve(true);
                 }
@@ -88,7 +87,12 @@ function findVehicle(licensePlate: string): Promise<any> {
         models.Vehicles.findOne({
             where: {
                 licensePlate: licensePlate,
-            }
+            },
+            include: [
+                {
+                    model: models.VehicleSize,
+                }
+            ]
         })
             .then((result) => {
                 resolve(result);
@@ -252,6 +256,7 @@ function checkCurrentFee(licensePlate: string): Promise<any> {
             .then(stayDuration => {
                 findVehicle(licensePlate)
                     .then((vehicle) => {
+                        console.log(vehicle.dataValues.vehicle_size.dataValues);
                         getDiscount(vehicle.dataValues.discountType)
                             .then((discountType) => {
                                 discountAmmount = discountType.dataValues.ammount;

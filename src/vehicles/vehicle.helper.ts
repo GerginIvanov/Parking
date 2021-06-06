@@ -82,7 +82,6 @@ function checkCurrentFee(licensePlate: string): Promise<PromiseResponse> {
     return new Promise((resolve, reject) => {
         services.checkCurrentFee(licensePlate)
             .then(result => {
-                console.log(result);
                 resolve(new PromiseResponse(
                     'Success',
                     `Vehicle with license plate ${licensePlate}'s current current fee is ${result} lv.`,
