@@ -56,7 +56,7 @@ function registerVehicle(data: any): Promise<any> {
  * 2. Add the discounts into the code calculations; I think this needs a getDiscount(licensePlate) method
  * 3. Check if I can skip the if-else in the registerVehicle() method
  * 4. Refactor the entire deregisterVehicle() funcitionality to have a good structure 
- *
+ * 5. See if I have time to move the prices to the DB
  */
 
 function deregisterVehicle(licensePlate: string): Promise<PromiseResponse> {

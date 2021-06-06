@@ -191,6 +191,60 @@ function stayDuration(licensePlate: string) { //this will need some cleaning up 
     });
 }
 
+function arrivalLargerThanDeparture(currentTime: number, registrationTime: number, day: number, night: number): Promise<number> {
+    let fee: number = 0;
+    const dayFee = day;
+    const nightFee = night;
+
+    return new Promise((resolve, reject) => {
+        let hours = 0;
+        console.log(`Countter starts at: ${hours}`);
+        console.log(`Arrival is larger than departure`);
+        while (hours < 24) {
+            if (hours > currentTime && hours < registrationTime) { //skip the interval when the car was not parked
+                hours++;
+                continue;
+            } else if (hours >= 8 && hours < 18) {
+                fee += dayFee;
+                console.log(`Day fee for ${hours} - ${hours + 1} and total fee currently is ${fee}`);
+                hours++;
+            } else {
+                fee += nightFee;
+                console.log(`Night fee for ${hours} - ${hours + 1} and total fee currently is ${fee}`);
+                hours++;
+            }
+        }
+        resolve(fee);
+    });
+}
+
+function arrivalLessThanDeparture(currentTime: number, registrationTime: number, day: number, night: number): Promise<number> {
+    let fee: number = 0;
+    const dayFee = day;
+    const nightFee = night;
+
+    return new Promise((resolve, reject) => {
+        console.log("Departure was bigger than arrival");
+        console.log("Reg time: " + registrationTime);
+        console.log("Current time: " + currentTime);
+        let hours = 0;
+        while (hours < 24) {
+            if (hours < registrationTime || hours > currentTime) {
+                hours++;
+                continue;
+            } else if (hours >= 8 && hours < 18) {
+                fee += dayFee;
+                console.log(`Day fee for ${hours} - ${hours + 1} and total fee currently is ${fee}`);
+                hours++;
+            } else {
+                fee += nightFee;
+                console.log(`Night fee for ${hours} - ${hours + 1} and total fee currently is ${fee}`);
+                hours++;
+            }
+        }
+        resolve(fee);
+    });
+}
 
 function calculatePrice(licensePlate: string, /* hours: number,*/ days: any = null): Promise<any> {  //if we pass a parameter for days it calculates differently
     return new Promise((resolve, reject) => {
@@ -198,6 +252,12 @@ function calculatePrice(licensePlate: string, /* hours: number,*/ days: any = nu
         let fee: number = 0;
         findVehicle(licensePlate)
             .then((vehicle) => {
+                /**
+                 * I decided to put these values in the .env file
+                 * because there are already enough calls to the DB
+                 * and I thought I would spare adding another
+                 * Might refactor later and add getPrice(licensePlate)
+                 */
                 if (vehicle.dataValues.vehicleType === "A") {
                     day = process.env.costDayA;
                     night = process.env.costNightB;
@@ -210,9 +270,6 @@ function calculatePrice(licensePlate: string, /* hours: number,*/ days: any = nu
                 }
                 const dayFee = parseInt(day);
                 const nightFee = parseInt(night);
-
-                console.log(`For this vehicle day fee is ${dayFee} and night fee is ${nightFee}`);
-
                 /**
                  * I think this entire if-else logic needs to be moved to the helper
                  * and afterwards I just need to separate the code itself into methods
@@ -229,48 +286,17 @@ function calculatePrice(licensePlate: string, /* hours: number,*/ days: any = nu
                                 .then(result => {
                                     //convert the car reg and dereg times into integers to use for the loops 
                                     let registrationTime = moment(result).hours();
-                                    /**
-                                     * This first if() works and is pushed to master
-                                     */
-                                    if (registrationTime > currentTime) { //if arrival > departure
-                                        let hours = 0;
-                                        console.log(`Countter starts at: ${hours}`);
-                                        console.log(`Arrival is larger than departure`);
-                                        while (hours < 24) {
-                                            if (hours > currentTime && hours < registrationTime) { //skip the interval when the car was not parked
-                                                hours++;
-                                                continue;
-                                            } else if (hours >= 8 && hours < 18) {
-                                                fee += dayFee;
-                                                console.log(`Day fee for ${hours} - ${hours + 1} and total fee currently is ${fee}`);
-                                                hours++;
-                                            } else {
-                                                fee += nightFee;
-                                                console.log(`Night fee for ${hours} - ${hours + 1} and total fee currently is ${fee}`);
-                                                hours++;
-                                            }
-                                        }
-                                        resolve(fee);
-                                    } else { //if arrival < departure
-                                        console.log("Departure was bigger than arrival");
-                                        console.log("Reg time: " + registrationTime);
-                                        console.log("Current time: " + currentTime);
-                                        let hours = 0;
-                                        while (hours < 24) {
-                                            if (hours < registrationTime || hours > currentTime) {
-                                                hours++;
-                                                continue;
-                                            } else if (hours >= 8 && hours < 18) {
-                                                fee += dayFee;
-                                                console.log(`Day fee for ${hours} - ${hours + 1} and total fee currently is ${fee}`);
-                                                hours++;
-                                            } else {
-                                                fee += nightFee;
-                                                console.log(`Night fee for ${hours} - ${hours + 1} and total fee currently is ${fee}`);
-                                                hours++;
-                                            }
-                                        }
-                                        resolve(fee);
+
+                                    if (registrationTime > currentTime) {
+                                        arrivalLargerThanDeparture(currentTime, registrationTime, dayFee, nightFee)
+                                            .then((result) => {
+                                                resolve(result);
+                                            })
+                                    } else {
+                                        arrivalLessThanDeparture(currentTime, registrationTime, dayFee, nightFee)
+                                            .then((result) => {
+                                                resolve(result);
+                                            })
                                     }
 
                                 })
@@ -290,4 +316,7 @@ export {
     findVehicle,
     calculatePrice,
     registrationTime,
+    arrivalLargerThanDeparture,
+    arrivalLessThanDeparture,
+
 }
