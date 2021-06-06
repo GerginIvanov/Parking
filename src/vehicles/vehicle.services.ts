@@ -8,7 +8,7 @@ function registerVehicle(data: any): Promise<boolean> {
             models.Vehicles.create({
                 licensePlate: data.licensePlate,
                 vehicleType: data.vehicleType,
-                discount: data.discount,
+                discountType: data.discount,
             })
                 .then(() => {
                     resolve(true);
@@ -43,10 +43,9 @@ function calculateFreeSpots(): Promise<any> {
                 } else {
                     for (let i = 0; i < allVehicles.length; i++) {
                         array.push(new Promise((resolve, reject) => {
-                            checkVehicleSize(allVehicles[i].dataValues.vehicleType)
+                            checkVehicleInfo(allVehicles[i].dataValues.vehicleType)
                                 .then(carSize => {
-                                    // console.log(carSize);
-                                    takenSpots += carSize;
+                                    takenSpots += carSize.dataValues.vehicleSize;
                                     resolve(takenSpots);
                                 })
                                 .catch((err) => {
@@ -74,7 +73,7 @@ function calculateFreeSpots(): Promise<any> {
     });
 }
 
-function checkVehicleSize(vehicleType: string): Promise<number> {
+function checkVehicleInfo(vehicleType: string): Promise<any> {
     return new Promise((resolve, reject) => {
         models.VehicleSize.findOne({
             where: {
@@ -82,7 +81,7 @@ function checkVehicleSize(vehicleType: string): Promise<number> {
             }
         })
             .then((result) => {
-                resolve(result.dataValues.vehicleSize);
+                resolve(result); //resolve entire result
             })
             .catch((err) => {
                 reject({ message: "Something went wrong: " + err });
@@ -92,9 +91,10 @@ function checkVehicleSize(vehicleType: string): Promise<number> {
 
 function checkAvailableSpace(freeSpots: number, vehicleType: string): Promise<boolean> {
     return new Promise((resolve, reject) => {
-        checkVehicleSize(vehicleType)
+        checkVehicleInfo(vehicleType)
             .then((spaceNeeded) => {
-                if (freeSpots > spaceNeeded) {
+                console.log(spaceNeeded);
+                if (freeSpots > spaceNeeded.dataValues.vehicleSize) {
                     resolve(true);
                 }
                 else {
@@ -258,7 +258,7 @@ function deregisterVehicle(licensePlate: string): Promise<boolean> {
 export {
     registerVehicle,
     calculateFreeSpots,
-    checkVehicleSize,
+    checkVehicleInfo,
     checkAvailableSpace,
     currentTime,
     stayDuration,

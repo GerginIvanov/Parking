@@ -5,6 +5,8 @@ import { BuildOptions, DataTypes, Model, Sequelize } from 'sequelize';
 interface VehicleSizeAttributes {
     vehicleType: string,
     vehicleSize: bigint,
+    dayPrice: bigint,
+    nightPrice: bigint,
 };
 
 export interface VehicleSizeModel extends Model<VehicleSizeAttributes>, VehicleSizeAttributes { };
@@ -22,6 +24,14 @@ export function VehicleSizeFactory(sequelize: Sequelize): VehicleSizeStatic {
             allowNull: false,
         },
         vehicleSize: {
+            type: DataTypes.BIGINT,
+            allowNull: false,
+        },
+        dayPrice: {
+            type: DataTypes.BIGINT,
+            allowNull: false,
+        },
+        nightPrice: {
             type: DataTypes.BIGINT,
             allowNull: false,
         }
