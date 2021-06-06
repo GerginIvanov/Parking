@@ -229,6 +229,9 @@ function calculatePrice(licensePlate: string, /* hours: number,*/ days: any = nu
                                 .then(result => {
                                     //convert the car reg and dereg times into integers to use for the loops 
                                     let registrationTime = moment(result).hours();
+                                    /**
+                                     * This first if() works and is pushed to master
+                                     */
                                     if (registrationTime > currentTime) { //if arrival > departure
                                         let hours = 0;
                                         console.log(`Countter starts at: ${hours}`);
@@ -248,24 +251,23 @@ function calculatePrice(licensePlate: string, /* hours: number,*/ days: any = nu
                                             }
                                         }
                                         resolve(fee);
-                                    } else { //if departure > arrival 
+                                    } else { //if arrival < departure
                                         console.log("Departure was bigger than arrival");
-                                        console.log("Reg time" + registrationTime);
-                                        console.log("Current time" + currentTime);
-                                        let hours = 23;
-                                        while (hours >= 0) {
-                                            if (hours < 20 && hours > 0) { //this actually works; wtf I gotta debug
-                                                hours--;
+                                        console.log("Reg time: " + registrationTime);
+                                        console.log("Current time: " + currentTime);
+                                        let hours = 0;
+                                        while (hours < 24) {
+                                            if (hours < registrationTime || hours > currentTime) {
+                                                hours++;
                                                 continue;
-                                            }
-                                            if (hours >= 8 && hours < 18) {
+                                            } else if (hours >= 8 && hours < 18) {
                                                 fee += dayFee;
-                                                console.log(hours, fee);
-                                                hours--;
+                                                console.log(`Day fee for ${hours} - ${hours + 1} and total fee currently is ${fee}`);
+                                                hours++;
                                             } else {
                                                 fee += nightFee;
-                                                console.log(hours, fee);
-                                                hours--;
+                                                console.log(`Night fee for ${hours} - ${hours + 1} and total fee currently is ${fee}`);
+                                                hours++;
                                             }
                                         }
                                         resolve(fee);

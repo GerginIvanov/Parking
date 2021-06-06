@@ -52,10 +52,10 @@ function registerVehicle(data: any): Promise<any> {
 //note: cannot resolve as this is POST request
 /**
  * 
- * 1. Get the current time
- * 2. Get the time when the car was parked
- * 3. Calculate elapsed time 
- * 4. Figure out how much of that is day and night
+ * 1. Also add a table for discounts to normalize
+ * 2. Add the discounts into the code calculations; I think this needs a getDiscount(licensePlate) method
+ * 3. Check if I can skip the if-else in the registerVehicle() method
+ * 4. Refactor the entire deregisterVehicle() funcitionality to have a good structure 
  *
  */
 
@@ -71,7 +71,7 @@ function deregisterVehicle(licensePlate: string): Promise<PromiseResponse> {
                         console.log(`You owe ${result}lv.`);
                         resolve(new PromiseResponse(
                             'Success',
-                            `You owe ${result} lv.`,
+                            `Vehicle with license ${licensePlate} owes ${result} lv.`,
                         ));
                     });
                 // if (days > 0) {
