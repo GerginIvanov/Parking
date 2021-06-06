@@ -60,14 +60,19 @@ function registerVehicle(data: any): Promise<any> {
  */
 
 function checkCurrentFee(licensePlate: string): Promise<PromiseResponse> {
+    let discountAmmount: number = 0;
     return new Promise((resolve, reject) => {
         services.stayDuration(licensePlate)
             .then(stayDuration => {
                 services.findVehicle(licensePlate)
                     .then((vehicle) => {
+                        services.getDiscount(vehicle.dataValues.discountType)
+                            .then((discountType) => {
+                                discountAmmount = discountType.dataValues.ammount;
+                            })
                         services.checkVehicleInfo(vehicle.dataValues.vehicleType)
                             .then((vehicleInfo) => {
-                                console.log(vehicleInfo);
+
                                 const dayFee = vehicleInfo.dataValues.dayPrice;
                                 const nightFee = vehicleInfo.dataValues.nightPrice;
                                 const days = Math.floor(stayDuration / 24);
@@ -86,7 +91,7 @@ function checkCurrentFee(licensePlate: string): Promise<PromiseResponse> {
                                                         .then((result) => {
                                                             resolve(new PromiseResponse(
                                                                 'Success',
-                                                                `Vehicle with license plate ${licensePlate} owes ${result + dayFormula} lv. for ${stayDuration + 1} hours.`,
+                                                                `Vehicle with license plate ${licensePlate} owes ${result + dayFormula - ((result + dayFormula) * discountAmmount / 100)} lv. for ${stayDuration + 1} hours and ${discountAmmount}% discount.`,
                                                             ));
                                                         })
                                                         .catch((err) => {
@@ -100,7 +105,7 @@ function checkCurrentFee(licensePlate: string): Promise<PromiseResponse> {
                                                         .then((result) => {
                                                             resolve(new PromiseResponse(
                                                                 'Success',
-                                                                `Vehicle with license plate ${licensePlate} owes ${result + dayFormula} lv. for ${stayDuration + 1} hours`,
+                                                                `Vehicle with license plate ${licensePlate} owes ${result + dayFormula - ((result + dayFormula) * discountAmmount / 100)} lv. for ${stayDuration + 1} hours and ${discountAmmount}% discount.`,
                                                             ));
                                                         })
                                                         .catch((err) => {

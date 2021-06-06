@@ -81,7 +81,7 @@ function checkVehicleInfo(vehicleType: string): Promise<any> {
             }
         })
             .then((result) => {
-                resolve(result); //resolve entire result
+                resolve(result);
             })
             .catch((err) => {
                 reject({ message: "Something went wrong: " + err });
@@ -107,35 +107,6 @@ function checkAvailableSpace(freeSpots: number, vehicleType: string): Promise<bo
     });
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-function currentTime(): Promise<any> {
-    return new Promise((resolve) => {
-        let time = Date.now();
-        let currentTime = moment(time);
-        resolve(currentTime);
-    });
-}
-
 function findVehicle(licensePlate: string): Promise<any> {
     return new Promise((resolve, reject) => {
         models.Vehicles.findOne({
@@ -149,6 +120,14 @@ function findVehicle(licensePlate: string): Promise<any> {
             .catch((err) => {
                 reject(err);
             })
+    });
+}
+
+function currentTime(): Promise<any> {
+    return new Promise((resolve) => {
+        let time = Date.now();
+        let currentTime = moment(time);
+        resolve(currentTime);
     });
 }
 
@@ -237,6 +216,28 @@ function arrivalLessThanDeparture(currentTime: number, registrationTime: number,
     });
 }
 
+function getDiscount(discountType: string): Promise<number> {
+    return new Promise((resolve, reject) => {
+        if (discountType === null) {
+            resolve(0);
+        } else {
+            models.Discount.findOne({
+                where: {
+                    discountType: discountType
+                }
+            })
+                .then((result) => {
+                    resolve(result);
+                })
+                .catch((err) => {
+                    reject({
+                        message: "Something went wrong: " + err,
+                    });
+                })
+        }
+    });
+}
+
 function deregisterVehicle(licensePlate: string): Promise<boolean> {
     return new Promise((resolve, reject) => {
         models.Vehicle.destroy({
@@ -267,5 +268,5 @@ export {
     registrationTime,
     arrivalLargerThanDeparture,
     arrivalLessThanDeparture,
-
+    getDiscount,
 }
