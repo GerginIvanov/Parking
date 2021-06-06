@@ -55,11 +55,6 @@ function registerVehicle(data: any): Promise<any> {
     });
 }
 
-//note: cannot resolve as this is POST request
-/**
- * 4. Try to write some good comments for the checkCurrentFees() service
- */
-
 function deregisterVehicle(licensePlate: string): Promise<any> {
     return new Promise((resolve, reject) => {
         services.checkCurrentFee(licensePlate)

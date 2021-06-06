@@ -248,8 +248,11 @@ function deregisterVehicle(licensePlate: string): Promise<boolean> {
  * but I moved it here so I can reuse it for both checking current fee and checking final sum when deregistering
  * 
  * An overview of the worflow is:
- * - check how long the car has been parked for
- * - 
+ * - check how long the car has been parked for and save the number of whole days in a variable
+ * - find the vehicle info by license plate and form there collect info about the discount and vehicle type
+ * - then use the vehicle type to get the correct pricing rate
+ * - from here the program just gets the current time and the time when the car was registered
+ * - then a comparison is made because the calculations are a bit different so I have two methods
  */
 
 function checkCurrentFee(licensePlate: string): Promise<any> {
