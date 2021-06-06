@@ -1,16 +1,13 @@
 import { PromiseResponse } from '../shared/promise.helper';
-const moment = require('moment');
-require('dotenv').config();
 const services = require('./vehicle.services');
 
-function getFreeSpots() {
+function getFreeSpots(): Promise<PromiseResponse> {
     return new Promise((resolve, reject) => {
         services.calculateFreeSpots()
             .then((result) => {
                 resolve(new PromiseResponse(
                     'Success', //these statuses can be used for unit testing
-                    // `There are currently ${result} free spots`,
-                    result
+                    `There are currently ${result} free spots`,
                 ));
             })
             .catch((err) => {
@@ -22,13 +19,12 @@ function getFreeSpots() {
     });
 }
 
-
 /**
  * First we check how many free spots are left
  * Then we compare that with how large a vehicle is
  * If there is enough room we register :) 
  */
-function registerVehicle(data: any): Promise<any> {
+function registerVehicle(data: any): Promise<PromiseResponse> {
     return new Promise((resolve, reject) => {
         services.calculateFreeSpots()
             .then((freeSpots) => {
@@ -56,7 +52,25 @@ function registerVehicle(data: any): Promise<any> {
     });
 }
 
-function deregisterVehicle(licensePlate: string): Promise<any> {
+function checkCurrentFee(licensePlate: string): Promise<PromiseResponse> {
+    return new Promise((resolve, reject) => {
+        services.checkCurrentFee(licensePlate)
+            .then(result => {
+                resolve(new PromiseResponse(
+                    'Success',
+                    `Vehicle with license plate ${licensePlate}'s current current fee is ${result} lv.`,
+                ))
+            })
+            .catch((err) => {
+                reject({
+                    status: "Error",
+                    message: "Something went wrong: " + err,
+                });
+            })
+    });
+}
+
+function deregisterVehicle(licensePlate: string): Promise<PromiseResponse> {
     return new Promise((resolve, reject) => {
         services.checkCurrentFee(licensePlate)
             .then(result => {
@@ -68,24 +82,6 @@ function deregisterVehicle(licensePlate: string): Promise<any> {
                             `Vehicle with license plate ${licensePlate} has been deregistered and the final fee is ${result} lv.`
                         ))
                     })
-            })
-            .catch((err) => {
-                reject({
-                    status: "Error",
-                    message: "Something went wrong: " + err,
-                });
-            })
-    });
-}
-
-function checkCurrentFee(licensePlate: string): Promise<PromiseResponse> {
-    return new Promise((resolve, reject) => {
-        services.checkCurrentFee(licensePlate)
-            .then(result => {
-                resolve(new PromiseResponse(
-                    'Success',
-                    `Vehicle with license plate ${licensePlate}'s current current fee is ${result} lv.`,
-                ))
             })
             .catch((err) => {
                 reject({

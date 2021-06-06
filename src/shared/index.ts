@@ -37,13 +37,9 @@ VehicleSize.hasMany(Vehicles, {
 });
 
 
-// Vehicles.belongsTo(Discount);
+Vehicles.belongsTo(Discount);
 
-Discount.hasMany(Vehicles, {
-    foreignKey: {
-        name: 'discountType',
-    }
-});
+Discount.hasMany(Vehicles);
 
 
 export const db: DB = {
