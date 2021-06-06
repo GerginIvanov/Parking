@@ -1,5 +1,6 @@
 import { PromiseResponse } from '../shared/promise.helper';
 import { checkAvailableSpace, stayDuration } from './vehicle.services';
+const moment = require('moment');
 require('dotenv').config();
 const services = require('./vehicle.services');
 
@@ -59,31 +60,75 @@ function registerVehicle(data: any): Promise<any> {
  * 5. See if I have time to move the prices to the DB
  */
 
-function deregisterVehicle(licensePlate: string): Promise<PromiseResponse> {
+function checkCurrentFee(licensePlate: string): Promise<PromiseResponse> {
     return new Promise((resolve, reject) => {
-        services.stayDuration(licensePlate) //this one works and doesnt throw errors
+        services.stayDuration(licensePlate)
             .then(stayDuration => {
+                services.findVehicle(licensePlate)
+                    .then((vehicle) => {
+                        let day, night;
 
-                const days = Math.floor(stayDuration / 24);
-                const hours = stayDuration - (days * 24);
-                services.calculatePrice(licensePlate)
-                    .then(result => {
-                        console.log(`You owe ${result}lv.`);
-                        resolve(new PromiseResponse(
-                            'Success',
-                            `Vehicle with license ${licensePlate} owes ${result} lv.`,
-                        ));
-                    });
-                // if (days > 0) {
-                //     services.calculatePrice(licensePlate, days)
-                //         .then()
-                //         .catch();
-                // } else {
-                //     services.calculatePrice(licensePlate)
-                //         .then(result => {
-                //             console.log(`You owe ${result}lv.`);
-                //         })
-                // }
+                        if (vehicle.dataValues.vehicleType === "A") {
+                            day = process.env.costDayA;
+                            night = process.env.costNightB;
+                        } else if (vehicle.dataValues.vehicleType === "B") {
+                            day = process.env.costDayB;
+                            night = process.env.costNightB;
+                        } else {
+                            day = process.env.costDayC;
+                            night = process.env.costNightC;
+                        }
+                        const dayFee = parseInt(day);
+                        const nightFee = parseInt(night);
+
+                        const days = Math.floor(stayDuration / 24);
+                        const dayFormula = (10 * dayFee + 14 * nightFee) * days;
+
+                        services.currentTime()
+                            .then(result => {
+                                let currentTime = moment(result).hours();
+                                services.registrationTime(licensePlate)
+                                    .then(result => {
+                                        //use reg/dereg times in whole hour format 
+                                        let registrationTime = moment(result).hours();
+
+                                        if (registrationTime > currentTime) {
+                                            services.arrivalLargerThanDeparture(currentTime, registrationTime, dayFee, nightFee)
+                                                .then((result) => {
+                                                    resolve(new PromiseResponse(
+                                                        'Success',
+                                                        `Vehicle with license plate ${licensePlate} owes ${result + dayFormula} lv.`,
+                                                    ));
+                                                })
+                                                .catch((err) => {
+                                                    reject({
+                                                        status: "Error",
+                                                        message: "Something went wrong: " + err,
+                                                    });
+                                                });
+                                        } else {
+                                            services.arrivalLessThanDeparture(currentTime, registrationTime, dayFee, nightFee)
+                                                .then((result) => {
+                                                    console.log(result, dayFormula, result + dayFormula);
+                                                    resolve(new PromiseResponse(
+                                                        'Success',
+                                                        `Vehicle with license plate ${licensePlate} owes ${result + dayFormula} lv.`,
+                                                    ));
+                                                })
+                                                .catch((err) => {
+                                                    reject({
+                                                        status: "Error",
+                                                        message: "Something went wrong: " + err,
+                                                    });
+                                                });
+                                        }
+
+                                    })
+                            })
+                    }
+                    )
+
+
             })
     });
 }
@@ -91,6 +136,6 @@ function deregisterVehicle(licensePlate: string): Promise<PromiseResponse> {
 export {
     getFreeSpots,
     registerVehicle,
-    deregisterVehicle,
+    checkCurrentFee,
 }
 
