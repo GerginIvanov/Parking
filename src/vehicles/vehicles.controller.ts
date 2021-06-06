@@ -28,6 +28,19 @@ function registerVehicle(req, res, next) {
 
 function deregisterVehicle(req, res, next) {
     try {
+        return helper.deregisterVehicle(req.params.licensePlate).then((response) => {
+            return res.status(200).send(response);
+        }, (err) => {
+            return next(err);
+        })
+    }
+    catch (err) {
+        return next(err);
+    }
+}
+
+function checkCurrentFee(req, res, next) {
+    try {
         return helper.checkCurrentFee(req.params.licensePlate).then((response) => {
             return res.status(200).send(response);
         }, (err) => {
@@ -42,6 +55,6 @@ function deregisterVehicle(req, res, next) {
 export {
     getFreeSpots,
     registerVehicle,
+    checkCurrentFee,
     deregisterVehicle,
-
 }

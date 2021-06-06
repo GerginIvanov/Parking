@@ -4,7 +4,7 @@ const vehicleCtrl = require('./vehicles.controller');
 
 router.get('/freeSpots', vehicleCtrl.getFreeSpots);
 router.post('/', vehicleCtrl.registerVehicle);
-router.get('/:licensePlate', vehicleCtrl.deregisterVehicle);
-// router.get('/:licensePlate', vehicleCtrl.getFees);
+router.get('/:licensePlate', vehicleCtrl.checkCurrentFee);
+router.delete('/:licensePlate', vehicleCtrl.deregisterVehicle);
 
 export default router;

@@ -3,32 +3,17 @@ const moment = require('moment');
 
 function registerVehicle(data: any): Promise<boolean> {
     return new Promise((resolve, reject) => {
-        //'discount' is an optional parameter so this if-else handles requests without a 'discount' in the req.body
-        if (data.discount) {
-            models.Vehicles.create({
-                licensePlate: data.licensePlate,
-                vehicleType: data.vehicleType,
-                discountType: data.discount,
+        models.Vehicles.create({
+            licensePlate: data.licensePlate,
+            vehicleType: data.vehicleType,
+            discountType: data.discount,
+        })
+            .then(() => {
+                resolve(true);
             })
-                .then(() => {
-                    resolve(true);
-                })
-                .catch((err) => {
-                    reject({ message: "Something went wrong: " + err });
-                });
-        } else {
-            models.Vehicles.create({ //check if we can rewrite without if-else
-                licensePlate: data.licensePlate,
-                vehicleType: data.vehicleType,
-            })
-                .then(() => {
-                    resolve(true);
-                })
-                .catch((err) => {
-                    reject({ message: "Something went wrong: " + err });
-                });
-        }
-
+            .catch((err) => {
+                reject({ message: "Something went wrong: " + err });
+            });
     });
 }
 
@@ -58,6 +43,7 @@ function calculateFreeSpots(): Promise<any> {
                      * There are N elements in it and each element is the current vehicle size + all the previously taken spots
                      * If we have 4 cars of type C the array is [4, 8, 12, 16]; It slightly resembles a Fibonacci sequence
                      * We use this to take the last element which is the number of spots used and just subtract that from 200
+                     * This way we can keep track how much space we have free
                      */
                     Promise.all(array)
                         .then((result) => {
@@ -143,7 +129,7 @@ function registrationTime(licensePlate: string): Promise<any> {
     });
 }
 
-function stayDuration(licensePlate: string) { //this will need some cleaning up tomorrow
+function stayDuration(licensePlate: string): Promise<any> {
     return new Promise((resolve, reject) => {
         registrationTime(licensePlate)
             .then(carRegistrationTime => {
@@ -152,8 +138,8 @@ function stayDuration(licensePlate: string) { //this will need some cleaning up 
                         let time2 = carRegistrationTime;
                         let carTime = moment(time2);
 
-                        console.log(`The car was parked at: ${carTime.format('H:mm')}`);
-                        console.log(`The current time is: ${currentTime.format('H:mm')}`);
+                        console.log(`The car was parked on: ${carTime.format('DD MM HH:mm')}`);
+                        console.log(`The current time is: ${currentTime.format('DD MM HH:mm')}`);
 
                         var duration = moment.duration(currentTime.diff(carTime)); //time elapsed between parking and leaving in 
                         var final = duration.asHours();
@@ -216,7 +202,7 @@ function arrivalLessThanDeparture(currentTime: number, registrationTime: number,
     });
 }
 
-function getDiscount(discountType: string): Promise<number> {
+function getDiscount(discountType: string): Promise<any> {
     return new Promise((resolve, reject) => {
         if (discountType === null) {
             resolve(0);
@@ -240,7 +226,7 @@ function getDiscount(discountType: string): Promise<number> {
 
 function deregisterVehicle(licensePlate: string): Promise<boolean> {
     return new Promise((resolve, reject) => {
-        models.Vehicle.destroy({
+        models.Vehicles.destroy({
             where: {
                 licensePlate: licensePlate,
             }
@@ -256,6 +242,77 @@ function deregisterVehicle(licensePlate: string): Promise<boolean> {
     });
 }
 
+/**
+ * I know this method is quite lengthy but I tried to separate almost any operations out of it
+ * This is mainly logic I use to call the correct methods and it was originally in the helper
+ * but I moved it here so I can reuse it for both checking current fee and checking final sum when deregistering
+ * 
+ * An overview of the worflow is:
+ * - check how long the car has been parked for
+ * - 
+ */
+
+function checkCurrentFee(licensePlate: string): Promise<any> {
+    let discountAmmount: number = 0;
+    return new Promise((resolve, reject) => {
+        stayDuration(licensePlate)
+            .then(stayDuration => {
+                findVehicle(licensePlate)
+                    .then((vehicle) => {
+                        getDiscount(vehicle.dataValues.discountType)
+                            .then((discountType) => {
+                                discountAmmount = discountType.dataValues.ammount;
+                            })
+                        checkVehicleInfo(vehicle.dataValues.vehicleType)
+                            .then((vehicleInfo) => {
+
+                                const dayFee = vehicleInfo.dataValues.dayPrice;
+                                const nightFee = vehicleInfo.dataValues.nightPrice;
+                                const days = Math.floor(stayDuration / 24);
+                                const dayFormula = (10 * dayFee + 14 * nightFee) * days;
+
+                                currentTime()
+                                    .then(result => {
+                                        let currentTime = moment(result).hours();
+                                        registrationTime(licensePlate)
+                                            .then(result => {
+                                                //use reg/dereg times in whole hour format 
+                                                let registrationTime = moment(result).hours();
+
+                                                if (registrationTime > currentTime) {
+                                                    arrivalLargerThanDeparture(currentTime, registrationTime, dayFee, nightFee)
+                                                        .then((result) => {
+                                                            resolve(result + dayFormula - ((result + dayFormula) * discountAmmount / 100));
+                                                        })
+                                                        .catch((err) => {
+                                                            reject({
+                                                                status: "Error",
+                                                                message: "Something went wrong: " + err,
+                                                            });
+                                                        });
+                                                } else {
+                                                    arrivalLessThanDeparture(currentTime, registrationTime, dayFee, nightFee)
+                                                        .then((result) => {
+                                                            resolve(result + dayFormula - ((result + dayFormula) * discountAmmount / 100));
+                                                        })
+                                                        .catch((err) => {
+                                                            reject({
+                                                                status: "Error",
+                                                                message: "Something went wrong: " + err,
+                                                            });
+                                                        });
+                                                }
+
+                                            })
+                                    })
+                            })
+                    })
+            })
+    });
+}
+
+
+
 export {
     registerVehicle,
     calculateFreeSpots,
@@ -269,4 +326,5 @@ export {
     arrivalLargerThanDeparture,
     arrivalLessThanDeparture,
     getDiscount,
+    checkCurrentFee,
 }
