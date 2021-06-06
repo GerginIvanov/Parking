@@ -18,44 +18,34 @@ function registerVehicle(data: any): Promise<boolean> {
 }
 
 function calculateFreeSpots(): Promise<any> {
-    let array: Array<any> = [];
     let takenSpots: number = 0;
     return new Promise((resolve, reject) => {
-        models.Vehicles.findAll()
+        models.Vehicles.findAll({
+            include: [
+                {
+                    model: models.VehicleSize,
+                    attributes: [
+                        'vehicleSize'
+                    ]
+                }
+            ]
+        })
             .then((allVehicles) => {
                 if (allVehicles.length == 0) {
                     resolve(200);
                 } else {
+
                     for (let i = 0; i < allVehicles.length; i++) {
-                        array.push(new Promise((resolve, reject) => {
-                            checkVehicleInfo(allVehicles[i].dataValues.vehicleType)
-                                .then(carSize => {
-                                    takenSpots += carSize.dataValues.vehicleSize;
-                                    resolve(takenSpots);
-                                })
-                                .catch((err) => {
-                                    reject({ message: "Something went wrong: " + err, });
-                                });
-                        }));
+                        takenSpots += allVehicles[i].dataValues.vehicle_size.dataValues.vehicleSize;
                     }
-                    /**
-                     * Basically at this point in the code we have an array which we resolve with Promise.all()
-                     * There are N elements in it and each element is the current vehicle size + all the previously taken spots
-                     * If we have 4 cars of type C the array is [4, 8, 12, 16]; It slightly resembles a Fibonacci sequence
-                     * We use this to take the last element which is the number of spots used and just subtract that from 200
-                     * This way we can keep track how much space we have free
-                     */
-                    Promise.all(array)
-                        .then((result) => {
-                            resolve(200 - result[result.length - 1]);
-                        })
-                        .catch((err) => {
-                            reject(err);
-                        })
+                    resolve(takenSpots);
                 }
-
             })
-
+            .catch((err) => {
+                reject({
+                    message: "Something went wrong: " + err,
+                });
+            })
     });
 }
 
@@ -144,7 +134,7 @@ function stayDuration(licensePlate: string): Promise<any> {
                         var duration = moment.duration(currentTime.diff(carTime)); //time elapsed between parking and leaving in 
                         var final = duration.asHours();
                         console.log(`Stay duration: ${Math.round(final) + 1} hours`);
-                        resolve(Math.round(final));
+                        resolve(Math.round(final)); //rounding the hours because the vehicle is taxed at the beginning of each hour
                     })
 
             })

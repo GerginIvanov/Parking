@@ -9,7 +9,8 @@ function getFreeSpots() {
             .then((result) => {
                 resolve(new PromiseResponse(
                     'Success', //these statuses can be used for unit testing
-                    `There are currently ${result} free spots`,
+                    // `There are currently ${result} free spots`,
+                    result
                 ));
             })
             .catch((err) => {
