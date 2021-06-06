@@ -63,27 +63,27 @@ function deregisterVehicle(licensePlate: string): Promise<PromiseResponse> {
     return new Promise((resolve, reject) => {
         services.stayDuration(licensePlate) //this one works and doesnt throw errors
             .then(stayDuration => {
-                
+
                 const days = Math.floor(stayDuration / 24);
                 const hours = stayDuration - (days * 24);
-                console.log();
                 services.calculatePrice(licensePlate)
-                .then(result => {
-                    console.log(`You owe ${result}lv. for ${hours} hours`);
-                })
-            //     const days = Math.floor(stayDuration / 24);
-            //     const hours = stayDuration - (days * 24);
-            //     if (stayDuration > 24) {
-            //         services.calculatePrice(licensePlate)
-            //             .then((fee) => {
-            //                 console.log(`You owe at least ${fee}lv. currently!`);
-            //             })
-            //     } else {
-            //         services.calculatePrice(licensePlate)
-            //             .then(result => {
-            //                 console.log(result);
-            //             })
-            //     }
+                    .then(result => {
+                        console.log(`You owe ${result}lv.`);
+                        resolve(new PromiseResponse(
+                            'Success',
+                            `You owe ${result} lv.`,
+                        ));
+                    });
+                // if (days > 0) {
+                //     services.calculatePrice(licensePlate, days)
+                //         .then()
+                //         .catch();
+                // } else {
+                //     services.calculatePrice(licensePlate)
+                //         .then(result => {
+                //             console.log(`You owe ${result}lv.`);
+                //         })
+                // }
             })
     });
 }
